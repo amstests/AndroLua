@@ -140,12 +140,13 @@ public class LuaActivity extends Activity implements ServiceConnection {
 	    	arg = LuaObject.fromReference(Lua.L,argRef);
 	    }
 	    try {
-		    if (modTable.isFunction()) {	    	
-				res = modTable.call(new Object[]{this,arg,state});
-		    	modTable = null;
-		    } else {
-		    	res = service.invokeMethod(modTable,"onCreate",this,arg,state);
+		    if (modTable.isFunction()) {	    
+		    	LuaObject android = service.require("android");
+		    	LuaObject aNew = android.getField("new");
+		    	res = aNew.call(new Object[]{modTable});
+		    	modTable = (LuaObject)res;
 		    }
+		    res = service.invokeMethod(modTable,"onCreate",this,arg,state);		    
 		} catch (LuaException e) {
 			log("onCreate "+e.getMessage());
 			res = null;

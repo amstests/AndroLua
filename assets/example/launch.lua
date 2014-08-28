@@ -4,7 +4,7 @@ local launch = require 'android'.new()
 local groups = {
     {group='GUI','list','expanded','pretty'},
     {group='Graphics','draw','plot','financial'},
-    {group='Forms','form','password'},
+    {group='Forms','form','password','.questions'},
 }
 
 local text = [[
@@ -27,7 +27,12 @@ function launch.create(me)
         end;
 
         onChildClick = function(child)
-            me:luaActivity('example.'..child)
+            if child:match '^%.' then
+                child = child:sub(2)
+            else
+                child = 'example.'..child
+            end
+            me:luaActivity(child)
             return true
         end;
 

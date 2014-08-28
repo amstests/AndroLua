@@ -10,6 +10,7 @@ import android.content.res.AssetManager;
 import android.os.Binder;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.StrictMode;
 import android.util.Log;
 
 import java.io.*;
@@ -138,7 +139,7 @@ public class Lua extends Service {
 	@Override
 	public int onStartCommand (Intent intent, int flags, int startid) {
 		handler = new Handler();
-		
+		StrictMode.setThreadPolicy(StrictMode.ThreadPolicy.LAX);
 		log("starting Lua service");
 		if (L == null) {
 			main_instance = this;

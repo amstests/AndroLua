@@ -3,6 +3,7 @@
 require 'android.import'
 local L = luajava.package 'java.lang'
 local IO = luajava.package 'java.io'
+local N = luajava.package 'java.net'
 local BUFSZ = 4*1024
 
 local utils = {}
@@ -29,6 +30,24 @@ function utils.readstring(f)
     return tostring(L.String(utils.readbytes(f)))
 end
 
+function utils.open_socket (host,port,timeout)
+    local client = N.Socket()
+    local addr = N.InetSocketAddress(host,port)
+    local ok,err = pcall(function()
+        client:connect(addr,timeout or 300)
+    end)
+    if ok then return client else return nil,err end
+end
+
+function utils.buffered_reader (stream)
+    return IO.BufferedReader(IO.InputStreamReader(stream))
+end
+
+function utils.reader_writer (c)
+    local r = utils.buffered_reader(c:getInputStream())
+    local w = IO.PrintWriter(c:getOutputStream())
+    return r,w
+end
 
 return utils
 

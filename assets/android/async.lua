@@ -18,7 +18,7 @@ function async.runnable (callback)
     return proxy('java.lang.Runnable',{
         run = function()
             local ok,err = pcall(callback)
-            if not ok then service:log(err) end
+            if not ok then LS:log(err) end
         end
     })
 end
@@ -32,9 +32,11 @@ local runnable_cache = {}
 function async.post (callback,later)
     local runnable = runnable_cache[callback]
     if not runnable then
+        -- cache runnable so we can delete it if needed
         runnable = async.runnable(callback)
         runnable_cache[callback] = runnable
     elseif later ~= nil then
+        -- only keep one instance for delayed execution
         handler:removeCallbacks(runnable)
     end
     if not later then
@@ -44,7 +46,19 @@ function async.post (callback,later)
     end
 end
 
---- read an HTTP request asynchronouslyy.
+function async.post_later (later,callback)
+    async.post(callback,later)
+end
+
+function async.cancel_post (callback)
+    local runnable = runnable_cache[callback]
+    if runnable then
+        handler:removeCallbacks(runnable)
+        runnable_cache[callback] = nil
+    end
+end
+
+--- read an HTTP request asynchronously.
 -- @string request
 -- @bool gzip
 -- @func callback function to receive string result

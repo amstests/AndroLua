@@ -8,20 +8,20 @@ function interp.macro (def)
     macros[def.name] = def
 end
 
-local function expand_macro (m,a)
-    if m.arg then
+local function expand_macro (M,a)
+    if M.arg then
         if not a then
-            a = m.last_arg
+            a = M.last_arg
             if not a then
                 return print 'you need to pass a parameter to this macro'
             end
         else
-            m.last_arg = a
+            M.last_arg = a
         end
     else
         a = '' -- keep format happy
     end
-    for i,line in ipairs(m) do
+    for i,line in ipairs(M) do
         local cmd = line:format(a)
         print('! '..cmd)
         interp.process_line(cmd)
@@ -34,33 +34,26 @@ if f then
     dofile 'defs.lua'
 end
 
-
+local winapi = require 'winapi'
 local t,c2,err
 local addr = arg[2] or 'localhost'
 local c = socket.connect(addr,3333)
-local req = arg[1] or 'no'
-c:send (req..'\n')
-require 'winapi'
+c:send ('yes\n')
+c:receive()
 local m = winapi.mutex()
-if req == 'yes' then
-    c:receive()
+t = winapi.thread(function()
     c2,err = socket.connect(addr,3334)
     if err then
       c:close()
-      return print('cannot connect to secondary socket',err)
+      error('cannot connect to secondary socket '..err)
     end
-    --
-    t = winapi.thread(function()
     while true do
         local res = c2:receive()
         res = res:gsub('\001','\n')
-        m:lock()
-        io.write(res)
-        m:release()
-      end
-    end,'ok')
-    winapi.sleep(50)
-end
+        m:pcall(io.write,res)
+   end
+end,'ok')
+winapi.sleep(50)
 
 local log = io.open('log.txt','a')
 
@@ -99,10 +92,11 @@ function readfile(file)
 end
 
 function eval(line)
-  c:send(line..'\n')
-  m:lock()
-  local res = c:receive()
-  m:release()
+  local res
+  m:pcall(function()
+    c:send(line..'\n')
+    res = c:receive()
+  end)
   return (res or '?'):gsub('\001','\n')
 end
 

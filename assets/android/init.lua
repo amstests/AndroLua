@@ -5,6 +5,7 @@ require 'android.import'
 
 -- public for now...
 android = {}
+local android = android
 
 local LS = service -- which is global for now
 local LPK = luajava.package
@@ -413,6 +414,8 @@ local function parse_input_type (input)
     return require 'android.input_type' (input)
 end
 
+local SMM
+
 --- set properties specific to `TextView` and `EditText`.
 -- @see TextProperties
 -- @param me
@@ -448,6 +451,21 @@ function android.setEditArgs (me,txt,args)
         end
         txt:setTypeface(tface)
     end
+    if args.inputType then -- see android:inputType
+        txt:setInputType(parse_input_type(args.inputType))
+        if args.inputType == 'textMultiLine' then
+            if args.gravity == nil then -- sensible default gravity
+                args.gravity = 'top|left'
+            end
+            if args.scrollable then
+                SMM = SMM or bind 'android.text.method.ScrollingMovementMethod':getInstance()
+                txt:setMovementMethod(SMM)
+            end
+        end
+    end
+    if args.focus == false then
+        txt:setFocusable(false)
+    end
     if args.gravity then
         local gg = split(args.gravity,'|')
         local g = 0
@@ -455,9 +473,6 @@ function android.setEditArgs (me,txt,args)
             g = g + V.Gravity[p:upper()]
         end
         txt:setGravity(g)
-    end
-    if args.inputType then -- see android:inputType
-        txt:setInputType(parse_input_type(args.inputType))
     end
     if args.scrollable then
         local smm = bind 'android.text.method.ScrollingMovementMethod':getInstance()
@@ -468,6 +483,17 @@ function android.setEditArgs (me,txt,args)
     if compound then
         local def = type(compound)=='number' and 0 or nil
         txt:setCompoundDrawablesWithIntrinsicBounds(L or def,T or def,R or def,B or def)
+    end
+end
+
+-- http://stackoverflow.com/questions/3506696/auto-scrolling-textview-in-android-to-bring-text-into-view?rq=1
+function android:scroll_to_end (txt)
+    local layout = txt:getLayout()
+    if layout then
+        local amt = layout:getLineTop(txt:getLineCount()) - txt:getHeight()
+        if amt > 0 then
+            txt:scrollTo(0,amt)
+        end
     end
 end
 
@@ -704,7 +730,7 @@ function android.luaView(me,t)
     if type(t) == 'function' then
         t = { onDraw = t }
     end
-    return me:give_id(service:launchLuaView(me.a,t))
+    return me:give_id(LS:launchLuaView(me.a,t))
 end
 
 local function parse_gravity (s)
@@ -760,7 +786,7 @@ local function linear (me,vertical,t)
                 end
                 if width then
                     width = me:parse_size(width)
-                    if vertical then axp = width else ayp = width end
+                    if not vertical then axp = width else ayp = width end
                 end
                 parms = LP(axp,ayp,weight or 0)
                 i = i + 1
@@ -821,7 +847,7 @@ local function lua_adapter(me,items,impl)
     if type(impl) == 'function' then
         impl = { getView = impl; items = items }
     end
-    return service:createLuaListAdapter(items,impl or me)
+    return LS:createLuaListAdapter(items,impl or me)
 end
 
 --- create a Lua list view.
@@ -893,7 +919,7 @@ end
 -- @param mod a Lua module name that defines the activity
 -- @param arg optional extra value to pass to activity
 function android.luaActivity (me,mod,arg)
-    return service:launchLuaActivity(me.a,mod,arg)
+    return LS:launchLuaActivity(me.a,mod,arg)
 end
 
 local handlers = {}

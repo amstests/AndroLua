@@ -56,14 +56,16 @@ classic "Hello World!" example. A long click on the whole editor will clear it.
 * a status/output window, that shows the output of 'print' function, and is
 scrollable should there be many lines of output
 
-You can also work interactively by connecting to the TCP port 3333 of the device.
+You can also work interactively from your PC by connecting to the TCP port 3333
+of the device.
 You can do that either directly by using WiFi, or through the USB cable. For that
 you need to run the following:
 
     $SDK/platform-tools/adb forward tcp:3333 tcp:3333
 
-In this version, there is a simple client `interp.lua` that uses LuaSocket. By
+In this version, there is a simple client `interp.lua` for Windows that uses LuaSocket. By
 default it will initially read stuff from `init.lua`.
+On Unix use `alshell`.
 
 For example:
 

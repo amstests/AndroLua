@@ -31,14 +31,17 @@ It provides a table `luajava` containing functions for binding Java classes and
 instantiating Java objects. `bindClass` is passed the full qualified name of the
 class (like `java.lang.math')
 
+```lua
     > Math = luajava.bindClass 'java.lang.Math'
     > = Math:sin(1.2)
     0.93203908596723
+```
 
 Please note that all java methods, even static ones, require a colon!
 
 To instantiate an object of a class, use `new`:
 
+```lua
 > ArrayList = luajava.bindClass 'java.util.ArrayList'
 > a = luajava.new(ArrayList)
 > a:add(10)
@@ -49,6 +52,7 @@ To instantiate an object of a class, use `new`:
 10
 > = a:get(1)
 one
+```
 
 LuaJava automatically boxes Lua types as Java objects, and unboxes them when they
 are returned, even with tables.  So `a:get(1)` returns a Lua string.
@@ -56,17 +60,20 @@ are returned, even with tables.  So `a:get(1)` returns a Lua string.
 Generally all Java `String` instances are converted into Lua strings; the exception
 is if you _explicitly_ create a Java string:
 
+```lua
     > String = luajava.bindClass 'java.lang.String'
     > s = luajava.new(String,'hello dolly')
     > = s
     hello dolly
     > = s:startsWith 'hello'
     true
+```
 
 These functions are tedious to type, and of course you can define local aliases for
 them.  The `import` utility module goes a little further and provides a global
 function `bind`:
 
+```lua
     > require 'android.import'
     > HashMap = bind 'java.util.HashMap'
     > h = HashMap()
@@ -76,11 +83,13 @@ function `bind`:
     bonzo
     > = h:get('hello')
     10
+```
 
 The chief thing to note is that `bind` makes the class callable, so we no longer
 have to explicitly use `new`.  If that constructor is passed a table, then an array
 of that type is generated. A special case is if the type represents a number:
 
+```lua
     > String = bind 'java.lang.String'
     > ss = String{'one','two','three'}
     > = ss
@@ -89,17 +98,20 @@ of that type is generated. A special case is if the type represents a number:
     > ii = Integer{10,20,30}
     > = ii
     [I@41578230
+```
 
 So `ii` is an array of actual primitive ints!
 
 It's still awkward to have to specify the full name of each class to be accessed. So
 there is a way to make packages:
 
+```lua
     > L = luajava.package 'java.lang'
     > = L.String
     class java.lang.String
     > = L.Boolean
     class java.lang.Boolean
+```
 
 `L` is a _smart table_ - if it can't find the field it uses `bind` to resolve the
 class, and thereafter contains a direct reference. So it's an efficient idiom, and
@@ -107,6 +119,7 @@ generally you will not need to assign classses to their own variables.
 
 `alshell` provides commands which begin with a dot:
 
+```lua
     -- test.lua
     print 'hello world!'
 
@@ -122,6 +135,7 @@ generally you will not need to assign classses to their own variables.
     > require 'mod'
     > = mod.answer()
     42
+```
 
 `.l` evaluates the Lua file directly, and `.m` writes the module to a location where
 `require` can find it. (It will clear out the package.loaded table entry so that
@@ -134,6 +148,7 @@ globals, since it's only possible to access globals from the interactive prompt.
 The file `init.lua` is first loaded by `alshell`. It contains the following useful
 definitions:
 
+```lua
     PK = luajava.package
     W = PK 'android.widget'
     G = PK 'android.graphics'
@@ -141,10 +156,12 @@ definitions:
     A = PK 'android'
     L = PK 'java.lang'
     U = PK 'java.util'
+```
 
 Once the session has started, you may explore the Android API interactively.
 (`main.a` is a reference to the initial running `LuaActivity` instance):
 
+```lua
     > r = main.a:getResources()
     > = r:getString(A.R_string.ok)
     OK
@@ -152,7 +169,7 @@ Once the session has started, you may explore the Android API interactively.
     Cancel
     > = r:getString(A.R_string.dialog_alert_title)
     Attention
-
+```
 
 ## Defining Activities in Lua
 
@@ -162,7 +179,7 @@ implements many of the useful methods and forwards them to a Lua table; so there
 
 For instance, here is a layout-only version of the AndroLua main activity:
 
-
+```lua
     -- raw.lua
     require 'android.import'
 
@@ -175,6 +192,7 @@ For instance, here is a layout-only version of the AndroLua main activity:
     end
 
     return raw
+```
 
 Note that `onCreate` receives a Java object of type `LuaActivity`; the base class
 method has already been called.
@@ -186,6 +204,7 @@ underscores and Lua identifiers cannot contain '$', this is a reasonable hack.
 Launching the activity uses the `.a` macro, which ends the current instance, uploads
 the file and launches the activity:
 
+```lua
     > .a raw
     ! MOD = raw
     ! if MOD and MOD.a then MOD.a:finish() end
@@ -193,6 +212,7 @@ the file and launches the activity:
     wrote /data/data/sk.kottman.androlua/files/raw.lua
     ! goapp 'raw'
     > starting Lua service
+```
 
 The beauty of this approach is that we can load and test an activity as fast as the
 device can create it!
@@ -200,6 +220,7 @@ device can create it!
 The best way to understand how the ball gets rolling in an AndroLua application is
 to look at Main.java:
 
+```java
     package sk.kottman.androlua;
 
     import android.app.Activity;
@@ -215,12 +236,14 @@ to look at Main.java:
         }
 
     }
+```
 
 The key resource here is 'main_module', which is defined as 'main' in the project;
 `LuaActivity` looks at the intent parameter 'LUA_MODULE' and does a `require` on it.
 
 This 'raw' style is fine, but we can make things even better:
 
+```lua
     easy = require 'android'.new()
 
     function easy.create(me)
@@ -233,6 +256,7 @@ This 'raw' style is fine, but we can make things even better:
     end
 
     return easy
+```
 
 Note that the entry point is now called `create`, and it receives a Lua table which
 wraps the underlying activity object and provides a set of useful methods.
@@ -250,6 +274,7 @@ The `android` module provides a few useful helpers when you wish to avoid XML - 
 as prototyping a layout dynamically. Here is another version of the main AndroLua
 activity, this time sans layout:
 
+```lua
     -- easy.lua
     easy = require 'android'.new()
 
@@ -280,6 +305,7 @@ activity, this time sans layout:
     end
 
     return easy
+```
 
 The `vbox` method generates a vertically oriented `LinearLayout`. It's passed a
 table of widgets which may be followed by layout commands. The simplest is '+',
@@ -292,6 +318,7 @@ Another Class.
 
 The following code attaches a callback to the button's click event:
 
+```lua
         me:on_click(executeBtn,function()
             local src = source:getText():toString()
             local ok,err = pcall(function()
@@ -303,6 +330,7 @@ The following code attaches a callback to the button's click event:
                 me:toast(err,true)
             end
         end)
+```
 
 The global `service` is a reference to the local Lua service object created by
 AndroLua, which is bound by `LuaActivity`.  (We could just as well have used
@@ -325,7 +353,9 @@ provides a simplified interface.
 
 So, for example:
 
+```lua
     me:alert('Warning|android.btn_star','ok','Please redo!')
+```
 
 ('android.btn_star' is short for the global `android.R.drawable.btn_star' resource.
 Wihtout the 'android.' it picks up the drawable from your `R.drawable` class defined
@@ -334,6 +364,7 @@ in the application's resources.)
 Another example is options and context menus. For instance, from the main AndroLua
 module:
 
+```lua
         local function launch (name)
             return function() me:luaActivity('examples.'..name) end
         end
@@ -344,6 +375,7 @@ module:
             "draw",launch 'draw',
             "icons",launch 'icons'
         }
+```
 
 `launch` is a classic factory function which generates callbacks. When you
 long-press the source widget, the context menu will appear.
@@ -362,6 +394,7 @@ AndroLua has a `LuaListAdapter` class which is backed by a Lua table. In
 `example/list.lua` (which shows the contents of the Lua global table), a custom view
 is defined like this:
 
+```lua
     local lv = me:luaListView(items,function (impl,position,view,parent)
         local item = items[position+1] -- position is zero-based...
         local txt1,txt2
@@ -384,6 +417,7 @@ is defined like this:
         txt1:setTextColor(item.type=='table' and tableclr or otherclr)
         return view
     end)
+```
 
 This does the usual optimization and reuses the previously created view.
 
@@ -396,6 +430,7 @@ Another kind of list view has expandable items. It's notorious for being a bitch
 setup if you're new to the game. Androlua defines a custom
 `ExpandableListViewAdapter` which works on Lua tables:
 
+```lua
     ela = require 'android'.new()
 
     -- the data is a list of entries, which are lists of children plus a corresponding
@@ -422,6 +457,7 @@ setup if you're new to the game. Androlua defines a custom
     end
 
     return ela
+```
 
 You override the two methods that generate the views; note that the signature is
 slightly different and you are passed the child or group object as well as the
@@ -433,7 +469,9 @@ Threading and Lua do not mix very well, since any particular Lua state is not
 thread-safe. However, you can launch a new thread together with a new state. The
 basic functionality is accessed from the global `service` object:
 
+```lua
     service:createLuaThread(module_name,data,on_progress,on_post)
+```
 
 The code that's actually run in a different thread/state is referenced by _module
 name_ - since it's tricky to copy functions across to different Lua states. The
@@ -476,6 +514,7 @@ array part of the table passed to the plot constructor, and the data is usually
 specified as `xvalues` and `yvalues` (however _if_ `data` is used, it's assumed to
 be in the form `{{x1,y1},{x2,y2}...}` as with Flot)
 
+```lua
     local normal = require 'android'.new()
     local Plot = require 'android.plot'
 
@@ -514,6 +553,7 @@ be in the form `{{x1,y1},{x2,y2}...}` as with Flot)
     end
 
     return normal
+```
 
 AndroLua has no problems here with UTF-8, although be aware that the `#` operator is
 not to be trusted with multibyte encodings. For instance, the plot module explicitly
@@ -554,9 +594,11 @@ that converts a value to a string. (This defaults to `tostring`)
 
 For instance, in 'examples/plot.lua' explicit ticks are provided like so:
 
+```lua
         xaxis = { -- we have our own ticks with labels
             ticks = {{0,'0'},{pi/2,'π/2'},{pi,'π'},{3*pi/2,'3π/2'},{2*pi,'2π'}},
         },
+```
 
 The `legend` field may be `false` to suppress it, a string giving the _corner_, or a
 table containing:
@@ -619,11 +661,13 @@ used without lookup overhead. This was very useful in the plot module, since the
 graphics primitives get called a great deal (note that this function must be given
 arguments of the desired type in order to resolve any overloads):
 
+```lua
     -- cache the lineTo method!
     local lineTo = luajava.method(path,'lineTo',0.0,0.0)
     for i = 2,#xdata do
         lineTo(path,scalex(xdata[i]),scaley(ydata[i]))
     end
+```
 
 Again, the major speedup seen was due to calming down garabage collector activity
 (which is a known bane of Android and other 'little Java' environments)

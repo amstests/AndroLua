@@ -116,12 +116,26 @@ public class Lua extends Service {
 			L.rawSetI(-2, nLoaders + 1);       // package loaders
 			L.pop(1);                          // package
 						
+			String filesDir, customPath;
 			L.getField(-1, "path");            // package path
-			String filesDir = main_instance.getFilesDir().toString();
-			String customPath = filesDir+"/?.lua;"+filesDir+"/?/init.lua";
-			L.pushString(";" + customPath);    // package path custom
+			filesDir = main_instance.getFilesDir().toString();
+			customPath = ";" + filesDir+"/?.lua;"+filesDir+"/?/init.lua";
+			filesDir = main_instance.getExternalFilesDir(null).toString();
+			customPath += ";" + filesDir+"/?.lua;"+filesDir+"/?/init.lua";
+			L.pushString(customPath);    // package path custom
 			L.concat(2);                       // package pathCustom
 			L.setField(-2, "path");            // package
+
+			// add cpaths
+			L.getField(-1, "cpath");            // package cpath
+			filesDir = main_instance.getFilesDir().toString();
+			customPath = ";" + filesDir+"/?.so";
+			filesDir = main_instance.getFilesDir().toString() + "/../lib";
+			customPath += ";" + filesDir+"/?.so";
+			L.pushString(customPath);    // package cpath custom
+			L.concat(2);                       // package cpathCustom
+			L.setField(-2, "cpath");            // package
+
 			L.pop(1);
 		} catch (Exception e) {
 			Log.d("lua","Cannot override print "+e.getMessage());

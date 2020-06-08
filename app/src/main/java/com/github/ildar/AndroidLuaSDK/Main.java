@@ -1,10 +1,10 @@
-package codepath.demos.helloworlddemo;
+package com.github.ildar.AndroidLuaSDK;
 
 import android.os.Bundle;
 import android.app.Activity;
 import android.view.Menu;
 
-public class HelloWorldActivity extends Activity {
+public class Main extends Activity {
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {

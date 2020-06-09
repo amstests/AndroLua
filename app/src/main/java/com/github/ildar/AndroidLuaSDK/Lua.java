@@ -30,6 +30,9 @@ public class Lua extends Service {
 			setGlobal("service",this);
 		}
 		log("Lua service started");
+		log("Starting `init`");
+		require("init");
+		log("`init` started");
 		
 		return START_STICKY;
 	}
@@ -157,6 +160,16 @@ public class Lua extends Service {
 	public void setGlobal(String name, Object value) {
 		L.pushJavaObject(value);
 		L.setGlobal(name); 
+	}
+
+	public LuaObject require(String mod) {
+		L.getGlobal("require");
+		L.pushString(mod);
+		if (L.pcall(1, 1, 0) != 0) {
+			log("require "+L.toString(-1));
+			return null;
+		}
+		return L.getLuaObject(-1);
 	}
 
 	private static byte[] readAll(InputStream input) throws Exception {

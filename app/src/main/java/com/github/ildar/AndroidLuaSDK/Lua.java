@@ -46,65 +46,62 @@ public class Lua extends Service {
 	public static LuaState newState(boolean startServer) {
 		LuaState L = LuaStateFactory.newLuaState();
 		L.openLibs();
-			final AssetManager am = main_instance.getAssets();
-			
-			JavaFunction assetLoader = new JavaFunction(L) {
-				@Override
-				public int execute() throws LuaException {
-					String name = L.toString(-1);
-					name = name.replace('.', '/');
-					InputStream is;
+		final AssetManager am = main_instance.getAssets();
+		JavaFunction assetLoader = new JavaFunction(L) {
+			@Override
+			public int execute() throws LuaException {
+				String name = L.toString(-1);
+				name = name.replace('.', '/');
+				InputStream is;
+				try {
 					try {
-						try {
-							is = am.open(name + ".lua");
-						} catch (IOException e) {
-							is = am.open(name + "/init.lua");
-						}
-						byte[] bytes = readAll(is);
-						L.LloadBuffer(bytes, name);
-						return 1;
-					} catch (Exception e) {
-						ByteArrayOutputStream os = new ByteArrayOutputStream();
-						e.printStackTrace(new PrintStream(os));
-						L.pushString("Cannot load module "+name+":\n"+os.toString());
-						return 1;
+						is = am.open(name + ".lua");
+					} catch (IOException e) {
+						is = am.open(name + "/init.lua");
 					}
+					byte[] bytes = readAll(is);
+					L.LloadBuffer(bytes, name);
+					return 1;
+				} catch (Exception e) {
+					ByteArrayOutputStream os = new ByteArrayOutputStream();
+					e.printStackTrace(new PrintStream(os));
+					L.pushString("Cannot load module "+name+":\n"+os.toString());
+					return 1;
 				}
-			};
+			}
+		};
 
-			L.getGlobal("package");	    // package
-			L.getField(-1, "loaders");	 // package loaders
-			int nLoaders = L.objLen(-1);       // package loaders
-			
+		L.getGlobal("package");	    // package
+		L.getField(-1, "loaders");	 // package loaders
+		int nLoaders = L.objLen(-1);       // package loaders
+		
 		try {
 			L.pushJavaFunction(assetLoader);   // package loaders loader
 		} catch (LuaException e) {
 			log("Couldn't push assetLoader into LuaState");
 		}
-			L.rawSetI(-2, nLoaders + 1);       // package loaders
-			L.pop(1);			  // package
-						
-			String filesDir, customPath;
-			L.getField(-1, "path");	    // package path
-			filesDir = main_instance.getFilesDir().toString();
-			customPath = ";" + filesDir+"/?.lua;"+filesDir+"/?/init.lua";
-			filesDir = main_instance.getExternalFilesDir(null).toString();
-			customPath += ";" + filesDir+"/?.lua;"+filesDir+"/?/init.lua";
-			L.pushString(customPath);    // package path custom
-			L.concat(2);		       // package pathCustom
-			L.setField(-2, "path");	    // package
-
-			// add cpaths
-			L.getField(-1, "cpath");	    // package cpath
-			filesDir = main_instance.getFilesDir().toString() + "/../lib";
-			customPath = ";" + filesDir+"/?.so";
-			filesDir = main_instance.getExternalFilesDir(null).toString() + "/../lib";
-			customPath += ";" + filesDir+"/?.so";
-			L.pushString(customPath);    // package cpath custom
-			L.concat(2);		       // package cpathCustom
-			L.setField(-2, "cpath");	    // package
-
-			L.pop(1);
+		L.rawSetI(-2, nLoaders + 1);       // package loaders
+		L.pop(1);			  // package
+		
+		// add searching in FilesDir / ExternalFilesDir
+		String filesDir, customPath;
+		L.getField(-1, "path");	    // package path
+		filesDir = main_instance.getFilesDir().toString();
+		customPath = ";" + filesDir+"/?.lua;"+filesDir+"/?/init.lua";
+		filesDir = main_instance.getExternalFilesDir(null).toString();
+		customPath += ";" + filesDir+"/?.lua;"+filesDir+"/?/init.lua";
+		L.pushString(customPath);    // package path custom
+		L.concat(2);		       // package pathCustom
+		L.setField(-2, "path");	    // package
+		L.getField(-1, "cpath");	    // package cpath
+		filesDir = main_instance.getFilesDir().toString() + "/../lib";
+		customPath = ";" + filesDir+"/?.so";
+		filesDir = main_instance.getExternalFilesDir(null).toString() + "/../lib";
+		customPath += ";" + filesDir+"/?.so";
+		L.pushString(customPath);    // package cpath custom
+		L.concat(2);		       // package cpathCustom
+		L.setField(-2, "cpath");	    // package
+		L.pop(1);
 		
 		return L;
 	}

@@ -26,3 +26,43 @@ android {
 
 }
 
+task copyFiles_luasocket1(type: Copy) {
+	from 'src/main/jni/luasocket/luasocket/src/ltn12.lua'
+	from 'src/main/jni/luasocket/luasocket/src/socket.lua'
+	from 'src/main/jni/luasocket/luasocket/src/mime.lua'
+	into 'src/main/assets'
+}
+
+task copyFiles_luasocket2(type: Copy) {
+	from 'src/main/jni/luasocket/luasocket/src/http.lua'
+	from 'src/main/jni/luasocket/luasocket/src/url.lua'
+	from 'src/main/jni/luasocket/luasocket/src/tp.lua'
+	from 'src/main/jni/luasocket/luasocket/src/ftp.lua'
+	from 'src/main/jni/luasocket/luasocket/src/headers.lua'
+	from 'src/main/jni/luasocket/luasocket/src/smtp.lua'
+	into 'src/main/assets/socket'
+}
+
+task fix_luasocket1 {
+	doLast {
+		exec {
+			workingDir 'src/main/assets'
+			commandLine 'sed', '-i', 's/socket.core/socket_core/', 'socket.lua'
+		}
+	}
+}
+
+task fix_luasocket2 {
+	doLast {
+		exec {
+			workingDir 'src/main/assets'
+			commandLine 'sed', '-i', 's/mime.core/mime_core/', 'mime.lua'
+		}
+	}
+}
+
+fix_luasocket1.dependsOn(copyFiles_luasocket1)
+preBuild.dependsOn(fix_luasocket1)
+fix_luasocket2.dependsOn(copyFiles_luasocket2)
+preBuild.dependsOn(fix_luasocket2)
+

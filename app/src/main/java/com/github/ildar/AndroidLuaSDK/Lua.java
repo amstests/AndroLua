@@ -98,9 +98,9 @@ public class Lua extends Service {
 		L.setField(-2, "path");	    // package
 		L.getField(-1, "cpath");	    // package cpath
 		filesDir = main_instance.getFilesDir().toString() + "/../lib";
-		customPath = ";" + filesDir+"/?.so";
+		customPath = ";" + filesDir+"/lib?.so";
 		filesDir = main_instance.getExternalFilesDir(null).toString() + "/../lib";
-		customPath += ";" + filesDir+"/?.so";
+		customPath += ";" + filesDir+"/lib?.so";
 		L.pushString(customPath);    // package cpath custom
 		L.concat(2);		       // package cpathCustom
 		L.setField(-2, "cpath");	    // package

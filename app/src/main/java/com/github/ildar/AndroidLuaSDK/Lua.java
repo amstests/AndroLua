@@ -46,43 +46,6 @@ public class Lua extends Service {
 	public static LuaState newState(boolean startServer) {
 		LuaState L = LuaStateFactory.newLuaState();
 		L.openLibs();
-		try {
-			JavaFunction print = new JavaFunction(L) {
-				@Override
-				public int execute() throws LuaException {
-					for (int i = 2; i <= L.getTop(); i++) {
-						int type = L.type(i);
-						String stype = L.typeName(type);
-						String val = null;
-						if (stype.equals("userdata")) {
-							Object obj = L.toJavaObject(i);
-							if (obj != null) // handle Java objects specially...
-								val = obj.toString();
-						}
-						if (val == null) {
-							L.getGlobal("tostring");
-							L.pushValue(i);
-							L.call(1, 1);
-							val = L.toString(-1);
-							L.pop(1);
-						}
-						output.append(val);
-						output.append("\t");
-					}
-					output.append("\n");
-					
-					synchronized (L) {
-						String out = output.toString();
-						if (! printToString && printer != null) {
-							printer.println(out + REPLACE);
-							printer.flush();
-							output.setLength(0);
-						}
-					}
-					return 0;
-				}
-			};
-			
 			final AssetManager am = main_instance.getAssets();
 			
 			JavaFunction assetLoader = new JavaFunction(L) {
@@ -108,14 +71,16 @@ public class Lua extends Service {
 					}
 				}
 			};
-			
-			print.register("print");
 
 			L.getGlobal("package");	    // package
 			L.getField(-1, "loaders");	 // package loaders
 			int nLoaders = L.objLen(-1);       // package loaders
 			
+		try {
 			L.pushJavaFunction(assetLoader);   // package loaders loader
+		} catch (LuaException e) {
+			log("Couldn't push assetLoader into LuaState");
+		}
 			L.rawSetI(-2, nLoaders + 1);       // package loaders
 			L.pop(1);			  // package
 						
@@ -131,18 +96,15 @@ public class Lua extends Service {
 
 			// add cpaths
 			L.getField(-1, "cpath");	    // package cpath
-			filesDir = main_instance.getFilesDir().toString();
-			customPath = ";" + filesDir+"/?.so";
 			filesDir = main_instance.getFilesDir().toString() + "/../lib";
+			customPath = ";" + filesDir+"/?.so";
+			filesDir = main_instance.getExternalFilesDir(null).toString() + "/../lib";
 			customPath += ";" + filesDir+"/?.so";
 			L.pushString(customPath);    // package cpath custom
 			L.concat(2);		       // package cpathCustom
 			L.setField(-2, "cpath");	    // package
 
 			L.pop(1);
-		} catch (Exception e) {
-			Log.d("lua","Cannot override print "+e.getMessage());
-		}			
 		
 		return L;
 	}

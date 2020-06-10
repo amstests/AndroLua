@@ -159,7 +159,7 @@ public class Lua extends Service {
 
 	public void setGlobal(String name, Object value) {
 		L.pushJavaObject(value);
-		L.setGlobal(name); 
+		L.setGlobal(name);
 	}
 
 	public LuaObject require(String mod) {

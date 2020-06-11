@@ -27,12 +27,15 @@ public class Lua extends Service {
 		if (L == null) {
 			main_instance = this;
 			L = newState(true);
-			setGlobal("service",this);
+			setGlobal("service", this);
+			setGlobal("intent", intent);
 		}
 		log("Lua service started");
-		log("Starting `init`");
-		require("init");
-		log("`init` started");
+		new Thread() { public void run() {
+			log("Starting `init`");
+			require("init");
+			log("`init` started");
+		} }.start();
 		
 		return START_STICKY;
 	}

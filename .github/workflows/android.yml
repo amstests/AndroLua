@@ -1,0 +1,30 @@
+name: Android build
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: 'recursive'
+    - name: "Prepare Android build"
+      uses: vgaidarji/android-github-actions-build@v1.0.1
+      with:
+        args: "${ANDROID_HOME}/tools/bin/sdkmanager --install 'ndk;16.1.4479499'"
+    - name: "deps"
+      run: |
+        ./gradlew dependencies
+    - name: "build"
+      run: |
+        ./gradlew build
+    - name: Archive build artifacts
+      uses: actions/upload-artifact@v1
+      with:
+        name: outputs
+        path: app/build/outputs

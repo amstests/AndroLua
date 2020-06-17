@@ -44,7 +44,7 @@ MIME_OBJS= \
 
 # socket-core
 include $(CLEAR_VARS)
-LOCAL_C_INCLUDES += $(LOCAL_PATH)/../lua
+LOCAL_C_INCLUDES += $(LOCAL_PATH)/../lua/lua
 LOCAL_C_INCLUDES += $(LOCAL_PATH)/luasocket/src
 LOCAL_CFLAGS += $(DEF_linux)
 LOCAL_MODULE     := socket_core
@@ -56,7 +56,7 @@ include $(BUILD_SHARED_LIBRARY)
 
 # mime-core
 include $(CLEAR_VARS)
-LOCAL_C_INCLUDES += $(LOCAL_PATH)/../lua
+LOCAL_C_INCLUDES += $(LOCAL_PATH)/../lua/lua
 LOCAL_C_INCLUDES += $(LOCAL_PATH)/luasocket/src
 LOCAL_CFLAGS += $(DEF_linux)
 LOCAL_MODULE     := mime_core

@@ -1,3 +1,7 @@
 [submodule "app/src/main/jni/luasocket/luasocket"]
 	path = app/src/main/jni/luasocket/luasocket
 	url = https://github.com/diegonehab/luasocket
+[submodule "app/src/main/jni/lua/lua"]
+	path = app/src/main/jni/lua/lua
+	url = https://github.com/ildar/lua
+	branch = branch-5.1

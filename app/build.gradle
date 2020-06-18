@@ -26,6 +26,10 @@ android {
 
 }
 
+dependencies {
+	api project(":luajava")
+}
+
 task fix_lua {
 	doLast {
 		exec {

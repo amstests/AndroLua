@@ -1,0 +1,28 @@
+apply plugin: 'com.android.library'
+
+android {
+	compileSdkVersion 28
+	buildToolsVersion "28.0.3"
+
+	defaultConfig {
+		minSdkVersion 9
+		targetSdkVersion 28
+		externalNativeBuild {
+			ndkBuild {
+				abiFilters 'armeabi-v7a'
+			}
+		}
+	}
+
+	//disable JNI build
+	/*
+	externalNativeBuild {
+		ndkBuild {
+			path 'src/main/jni/Android.mk'
+		}
+	}
+	*/
+	sourceSets { main { jni.srcDirs = [] } }
+}
+
+// TODO: javah -o /tmp/luajava.h -classpath build/intermediates/intermediate-jars/debug/classes.jar org.keplerproject.luajava.LuaState

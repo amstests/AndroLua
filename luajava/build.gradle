@@ -25,4 +25,21 @@ android {
 	sourceSets { main { jni.srcDirs = [] } }
 }
 
-// TODO: javah -o /tmp/luajava.h -classpath build/intermediates/intermediate-jars/debug/classes.jar org.keplerproject.luajava.LuaState
+task gen_luajava_h {
+	doLast {
+		exec {
+			commandLine 'javah',
+				'-o', 'src/main/jni/luajava/luajava.h',
+				'-classpath', "build/intermediates/javac/debug/compileDebugJavaWithJavac/classes",
+				'org.keplerproject.luajava.LuaState'
+		}
+	}
+}
+
+tasks.whenTaskAdded { task ->
+	if (task.name == 'externalNativeBuildDebug') {
+		task.dependsOn( gen_luajava_h )
+	} else if (task.name == 'compileDebugJavaWithJavac') {
+		gen_luajava_h.dependsOn(task)
+	}
+}

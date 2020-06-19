@@ -5,3 +5,7 @@
 	path = app/src/main/jni/lua/lua
 	url = https://github.com/ildar/lua
 	branch = branch-5.1
+[submodule "luajava/luajava"]
+	path = luajava/luajava
+	url = https://github.com/ildar/luajava
+	branch = stevedonovan_mkottman

@@ -3,27 +3,22 @@
 
 -- replace print
 local Log = luajava.bindClass 'android.util.Log'
-local print_spooler_fifo = require("fifo") () ; print_spooler_fifo:setempty(function() return nil; end)
-function print_spooler()
-  assert( not coroutine.running(), "print_spooler() cannot be used from a coroutine" )
-  local msg_tab = print_spooler_fifo:pop()
-  while msg_tab do
-    Log:v("lua-print", table.concat(msg_tab,'\t'))
-    msg_tab = print_spooler_fifo:pop()
-  end
-end
+local cim = require 'call_in_mainthread'
 function print(...)
   local args = {...}
-  if tostring(args[1]):find("No such method") then
-    print_spooler_fifo:push( { debug.traceback() } )
-  end
   for i=1,#args do
     args[i] = tostring(args[i])
   end
-  print_spooler_fifo:push( args )
-  if not coroutine.running() then
-    print_spooler()
+  if coroutine.running() then
+    cim.mainthread_call(Log.v, Log, "lua-print-co", table.concat(args,'\t'))
+  else
+    cim.mainthread_process()
+    Log:v("lua-print", table.concat(args,'\t'))
   end
+--[[  if tostring(args[1]):find("No such method") then
+    print( { debug.traceback() } )
+  end
+]]
 end
 
 print "AndroidLuaSDK init finished"

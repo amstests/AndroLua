@@ -22,3 +22,9 @@ function print(...)
 end
 
 print "AndroidLuaSDK init finished"
+
+-- uncomment to have debug session
+-- require("mobdebug").loop()
+
+-- uncomment to have Tango RPC session
+-- require 'init-tango'

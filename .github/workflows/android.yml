@@ -17,7 +17,7 @@ jobs:
       uses: vgaidarji/android-github-actions-build@v1.0.1
       with:
         args: "${ANDROID_HOME}/tools/bin/sdkmanager --install 'ndk;16.1.4479499'"
-    - name: "deps"
+    - name: Resolve Dependencies
       run: |
         ./gradlew dependencies
     - name: "build"
